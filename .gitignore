@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model checkpoints and outputs (too large for git)
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+outputs/
+checkpoints/
+
+# OS
+.DS_Store
