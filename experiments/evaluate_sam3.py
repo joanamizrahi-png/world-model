@@ -122,6 +122,7 @@ def main():
     parser.add_argument("--rugd_dir", required=True, help="Path to RUGD_frames-with-annotations")
     parser.add_argument("--ann_dir", required=True, help="Path to RUGD_annotations")
     parser.add_argument("--n_images", type=int, default=50)
+    parser.add_argument("--output", default="outputs/evaluation_results.txt")
     parser.add_argument("--threshold", type=float, default=0.3)
     args = parser.parse_args()
 
@@ -171,8 +172,8 @@ def main():
     output = "\n".join(lines)
     print(output)
 
-    os.makedirs("outputs", exist_ok=True)
-    log_path = "outputs/evaluation_results.txt"
+    os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
+    log_path = args.output
     with open(log_path, "w") as f:
         f.write(f"n_images={args.n_images}, threshold={args.threshold}\n")
         f.write("\n=== Per-image results ===\n")
