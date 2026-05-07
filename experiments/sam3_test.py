@@ -42,10 +42,16 @@ def main():
     os.makedirs("outputs", exist_ok=True)
 
     for prompt in args.prompts:
-        print(f"Running prompt: '{prompt}'")
-        inference_state = processor.set_text_prompt(state=inference_state, prompt=prompt)
+        processor.reset_all_prompts(inference_state)
+        state = processor.set_text_prompt(state=inference_state, prompt=prompt)
+        n = len(state["masks"]) if state["masks"] is not None else 0
+        scores = state["scores"].tolist() if state["scores"] is not None else []
+        print(f"  '{prompt}': {n} detections, scores={[round(s,2) for s in scores]}")
 
-    print("inference_state keys:", list(inference_state.keys()))
+    # final run with all prompts for visualization
+    processor.reset_all_prompts(inference_state)
+    for prompt in args.prompts:
+        inference_state = processor.set_text_prompt(state=inference_state, prompt=prompt)
 
     plot_results(image, inference_state)
     plt.savefig(args.output, dpi=150, bbox_inches="tight")
