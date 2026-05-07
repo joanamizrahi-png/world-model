@@ -62,6 +62,8 @@ def main():
         print(f"  '{prompt}': {n} detection(s), scores={[round(s,2) for s in scores.tolist()]}")
 
         for mask in masks:
+            if isinstance(mask, torch.Tensor):
+                mask = mask.cpu().numpy()
             if mask.ndim == 3:
                 mask = mask[0]
             mask_bool = mask.astype(bool)
