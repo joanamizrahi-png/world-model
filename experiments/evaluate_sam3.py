@@ -37,10 +37,13 @@ RUGD_NAME_TO_ID = {v: k for k, v in RUGD_ID_TO_NAME.items()}
 WEIGHTS_DIR = os.path.expanduser("~/joana/sam3/weights")
 
 
-def get_image_annotation_pairs(rugd_dir, n_images):
+def get_image_annotation_pairs(rugd_dir, ann_dir, n_images):
     pairs = []
-    for ann_path in sorted(glob.glob(f"{rugd_dir}/**/*_annotation.png", recursive=True)):
-        img_path = ann_path.replace("_annotation.png", ".png")
+    for ann_path in sorted(glob.glob(f"{ann_dir}/**/*.png", recursive=True)):
+        # annotation: ~/rugd_annotations/RUGD_annotations/creek/creek_00001.png
+        # image:      ~/rugd/RUGD_frames-with-annotations/creek/creek_00001.png
+        rel = os.path.relpath(ann_path, ann_dir)
+        img_path = os.path.join(rugd_dir, rel)
         if os.path.exists(img_path):
             pairs.append((img_path, ann_path))
     return pairs[:n_images]
@@ -95,7 +98,8 @@ def run_sam3_on_image(model, processor, image, threshold):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rugd_dir", required=True)
+    parser.add_argument("--rugd_dir", required=True, help="Path to RUGD_frames-with-annotations")
+    parser.add_argument("--ann_dir", required=True, help="Path to RUGD_annotations")
     parser.add_argument("--n_images", type=int, default=50)
     parser.add_argument("--threshold", type=float, default=0.3)
     args = parser.parse_args()
@@ -108,7 +112,7 @@ def main():
     model = build_sam3_image_model(load_from_HF=True, checkpoint_path=f"{WEIGHTS_DIR}/sam3.pt")
     processor = Sam3Processor(model, confidence_threshold=args.threshold)
 
-    pairs = get_image_annotation_pairs(args.rugd_dir, args.n_images)
+    pairs = get_image_annotation_pairs(args.rugd_dir, args.ann_dir, args.n_images)
     print(f"Found {len(pairs)} image-annotation pairs, evaluating {len(pairs)}...")
 
     all_ious = defaultdict(list)
