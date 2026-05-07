@@ -58,15 +58,17 @@ def rgb_annotation_to_class_map(ann_rgb):
 WEIGHTS_DIR = os.path.expanduser("~/joana/sam3/weights")
 
 
-def get_image_annotation_pairs(rugd_dir, ann_dir, n_images):
+def get_image_annotation_pairs(rugd_dir, ann_dir, n_images, seed=42):
+    import random
     pairs = []
-    for ann_path in sorted(glob.glob(f"{ann_dir}/**/*.png", recursive=True)):
-        # annotation: ~/rugd_annotations/RUGD_annotations/creek/creek_00001.png
-        # image:      ~/rugd/RUGD_frames-with-annotations/creek/creek_00001.png
+    for ann_path in glob.glob(f"{ann_dir}/**/*.png", recursive=True):
         rel = os.path.relpath(ann_path, ann_dir)
         img_path = os.path.join(rugd_dir, rel)
         if os.path.exists(img_path):
             pairs.append((img_path, ann_path))
+    random.seed(seed)
+    random.shuffle(pairs)
+    print(f"Total images available: {len(pairs)}")
     return pairs[:n_images]
 
 
@@ -134,7 +136,7 @@ def main():
     model = build_sam3_image_model(load_from_HF=True, checkpoint_path=f"{WEIGHTS_DIR}/sam3.pt")
     processor = Sam3Processor(model, confidence_threshold=args.threshold)
 
-    pairs = get_image_annotation_pairs(args.rugd_dir, args.ann_dir, args.n_images)
+    pairs = get_image_annotation_pairs(args.rugd_dir, args.ann_dir, args.n_images, seed=42)
     print(f"Found {len(pairs)} image-annotation pairs, evaluating {len(pairs)}...")
 
     all_ious = defaultdict(list)
