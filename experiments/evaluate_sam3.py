@@ -24,7 +24,7 @@ import sam3
 from sam3 import build_sam3_image_model
 from sam3.model.sam3_image_processor import Sam3Processor
 
-# RUGD class index → name (0-indexed)
+# RUGD class index → name and RGB color
 RUGD_ID_TO_NAME = {
     0: "void", 1: "dirt", 2: "sand", 3: "grass", 4: "tree", 5: "pole",
     6: "water", 7: "sky", 8: "vehicle", 9: "container", 10: "asphalt",
@@ -33,6 +33,27 @@ RUGD_ID_TO_NAME = {
     21: "rock", 22: "bridge", 23: "concrete", 24: "picnic-table"
 }
 RUGD_NAME_TO_ID = {v: k for k, v in RUGD_ID_TO_NAME.items()}
+
+# RGB color → class ID lookup
+RUGD_COLOR_TO_ID = {
+    (0, 0, 0): 0, (108, 64, 20): 1, (255, 229, 204): 2, (0, 102, 0): 3,
+    (0, 255, 0): 4, (0, 153, 153): 5, (0, 128, 255): 6, (0, 0, 255): 7,
+    (255, 255, 0): 8, (255, 0, 127): 9, (64, 64, 64): 10, (255, 128, 0): 11,
+    (255, 0, 0): 12, (153, 76, 0): 13, (102, 102, 0): 14, (102, 0, 0): 15,
+    (0, 255, 128): 16, (204, 153, 255): 17, (102, 0, 204): 18, (255, 153, 204): 19,
+    (0, 102, 102): 20, (153, 204, 255): 21, (102, 255, 255): 22, (101, 101, 11): 23,
+    (114, 85, 47): 24
+}
+
+
+def rgb_annotation_to_class_map(ann_rgb):
+    """Convert RGB annotation image to per-pixel class ID map."""
+    h, w = ann_rgb.shape[:2]
+    class_map = np.zeros((h, w), dtype=np.int32)
+    for color, cid in RUGD_COLOR_TO_ID.items():
+        mask = np.all(ann_rgb == np.array(color), axis=2)
+        class_map[mask] = cid
+    return class_map
 
 WEIGHTS_DIR = os.path.expanduser("~/joana/sam3/weights")
 
@@ -120,7 +141,7 @@ def main():
 
     for img_path, ann_path in pairs:
         image = Image.open(img_path).convert("RGB")
-        gt_map = np.array(Image.open(ann_path).convert("P"))  # palette mode = class indices
+        gt_map = rgb_annotation_to_class_map(np.array(Image.open(ann_path).convert("RGB")))
 
         results = run_sam3_on_image(model, processor, image, args.threshold)
         pred_map = masks_to_pred_map(results, gt_map.shape, RUGD_ID_TO_NAME)
