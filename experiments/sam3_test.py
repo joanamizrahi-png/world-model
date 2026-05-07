@@ -43,8 +43,9 @@ def main():
 
     for prompt in args.prompts:
         print(f"Running prompt: '{prompt}'")
-        processor.reset_all_prompts(inference_state)
         inference_state = processor.set_text_prompt(state=inference_state, prompt=prompt)
+
+    print("inference_state keys:", list(inference_state.keys()))
 
     plot_results(image, inference_state)
     plt.savefig(args.output, dpi=150, bbox_inches="tight")
