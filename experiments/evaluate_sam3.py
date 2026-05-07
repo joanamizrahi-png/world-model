@@ -112,6 +112,7 @@ def main():
     print(f"Found {len(pairs)} image-annotation pairs, evaluating {len(pairs)}...")
 
     all_ious = defaultdict(list)
+    per_image_log = []
 
     for img_path, ann_path in pairs:
         image = Image.open(img_path).convert("RGB")
@@ -124,7 +125,12 @@ def main():
         for cid, iou in ious.items():
             all_ious[cid].append(iou)
 
-        print(f"  {os.path.basename(img_path)}: {len(ious)} classes evaluated")
+        img_name = os.path.basename(img_path)
+        img_miou = np.mean(list(ious.values())) if ious else 0.0
+        per_image_log.append(f"{img_name}: mIoU={img_miou:.3f} | " + " ".join(
+            f"{RUGD_ID_TO_NAME[cid]}={iou:.2f}" for cid, iou in sorted(ious.items())
+        ))
+        print(f"  {img_name}: mIoU={img_miou:.3f}")
 
     lines = ["\n=== Results ==="]
     mean_ious = {}
@@ -144,6 +150,8 @@ def main():
     log_path = "outputs/evaluation_results.txt"
     with open(log_path, "w") as f:
         f.write(f"n_images={args.n_images}, threshold={args.threshold}\n")
+        f.write("\n=== Per-image results ===\n")
+        f.write("\n".join(per_image_log))
         f.write(output)
     print(f"\nLog saved: {log_path}")
 
