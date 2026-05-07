@@ -15,10 +15,9 @@ from sam3 import build_sam3_image_model
 from sam3.model.sam3_image_processor import Sam3Processor
 from sam3.visualization_utils import plot_results
 
-SAM3_ROOT = os.path.join(os.path.dirname(sam3.__file__), "..")
-BPE_PATH = f"{SAM3_ROOT}/assets/bpe_simple_vocab_16e6.txt.gz"
-
 MATERIAL_PROMPTS = ["grass", "gravel", "concrete", "mud", "water", "sand", "asphalt", "dirt", "rock", "vegetation"]
+
+WEIGHTS_DIR = os.path.expanduser("~/joana/sam3/weights")
 
 
 def main():
@@ -34,7 +33,7 @@ def main():
     torch.autocast("cuda", dtype=torch.bfloat16).__enter__()
 
     print("Loading SAM3...")
-    model = build_sam3_image_model(bpe_path=BPE_PATH)
+    model = build_sam3_image_model(load_from_HF=True, checkpoint_path=f"{WEIGHTS_DIR}/sam3.pt")
 
     image = Image.open(args.image).convert("RGB")
     processor = Sam3Processor(model, confidence_threshold=args.threshold)
