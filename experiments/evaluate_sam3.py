@@ -51,7 +51,7 @@ def get_image_annotation_pairs(rugd_dir, ann_dir, n_images):
 
 def masks_to_pred_map(results, image_shape, rugd_id_to_name):
     """Convert SAM3 results to a per-pixel predicted class map."""
-    h, w = image_shape
+    h, w = image_shape[:2]
     pred_map = np.zeros((h, w), dtype=np.int32)  # 0 = void/unlabeled
 
     name_to_id = {v: k for k, v in rugd_id_to_name.items()}
@@ -120,7 +120,7 @@ def main():
 
     for img_path, ann_path in pairs:
         image = Image.open(img_path).convert("RGB")
-        gt_map = np.array(Image.open(ann_path))
+        gt_map = np.array(Image.open(ann_path).convert("P"))  # palette mode = class indices
 
         results = run_sam3_on_image(model, processor, image, args.threshold)
         pred_map = masks_to_pred_map(results, gt_map.shape, RUGD_ID_TO_NAME)
